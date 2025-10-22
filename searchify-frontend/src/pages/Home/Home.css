@@ -1,0 +1,9 @@
+.no-shadow-input:focus,
+.no-shadow-input:hover {
+  box-shadow: none !important;
+  outline: none !important;
+}
+.w-400
+{
+  width: 400px;
+}
