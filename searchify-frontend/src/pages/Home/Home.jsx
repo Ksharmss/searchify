@@ -48,6 +48,7 @@ function Home() {
 
   const handleSelectSuggestion = (title) => {
     dispatch(setQuery(title));
+    dispatch(setQuery("")); 
     setSuggestions([]);
     navigate("/results");
   };
