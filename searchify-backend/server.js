@@ -1,27 +1,39 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
-const data = require("./data/mockResults");
+const mockData = require("./data/mockResults");
 
 const app = express();
-// Enable CORS (important!)
-app.use(cors({
-  origin: "*", // allow all origins (for dev)
-  methods: ["GET", "POST"],
-}));
-app.use(express.json());
+app.use(cors());
+
+// 🔍 Search API
 app.get("/api/search", (req, res) => {
-  const q = req.query.q || req.query.query || "";
-  const query = q.trim().toLowerCase();
+  const q = req.query.q?.toLowerCase();
+  if (!q) return res.json({error: "Country not found" });
+  // Return countries that match the query
+  const results = mockData
+    .filter((item) => item.country.toLowerCase().includes(q))
+    .map((item) => ({
+      country: item.country,
+      flag: item.flag,
+    }));
 
-  if (!query) return res.status(400).json({ success: false, message: "Query required" });
-
-  const results = (data || []).filter((item) => {
-    const title = item.title?.toLowerCase() || "";
-    const desc = item.description?.toLowerCase() || "";
-    return title.includes(query) || desc.includes(query);
-  });
-
-  res.json({ success: true, results });
+  res.json({ results });
 });
 
-app.listen(8000, () => console.log("✅ Backend running on http://localhost:8000"));
+// 📄 Details API
+app.get("/api/details", (req, res) => {
+  const q = req.query.q?.toLowerCase();
+  const country = mockData.find((item) => item.country.toLowerCase() === q);
+
+  if (!country) return res.json({ error: "Country not found" });
+  res.json({
+    country: country.country,
+    flag: country.flag,
+    details: country.details,
+    places: country.places,
+  });
+});
+
+const PORT = 8000;
+app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
