@@ -27,7 +27,9 @@ function Results() {
     <div className="container mt-5">
 
       {results && results.length > 0 ? (
-        <div className="row">
+       
+       <div className="row">
+           <h2>Search Results</h2>
           {results.map((item, index) => (
             <div className="col-md-3 mb-4" key={index}>
               <div className="card h-100 pointer">

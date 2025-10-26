@@ -35,3 +35,8 @@ img{
 {
 height: 350px!important;
 }
+
+.card
+{
+  border: none!important;
+}
