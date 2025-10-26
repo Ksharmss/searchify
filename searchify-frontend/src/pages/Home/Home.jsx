@@ -1,61 +1,48 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setQuery } from "../../redux/searchSlice";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import './Home.css';
+import "./Home.css";
 
 function Home() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const query = useSelector((state) => state.search.query);
+  const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    if (query.trim().length > 0) {
-      axios
-        .get(`http://localhost:8000/api/search?q=${query}`)
-        .then((res) => setSuggestions(res.data.results || []))
-        .catch((err) => {
-          console.error(err);
-          setSuggestions([]);
-        });
-    } else {
+    // Only call API if input length >= 3
+    if (!inputValue || inputValue.trim().length < 3) {
       setSuggestions([]);
+      return;
     }
-  }, [query]);
+    const controller = new AbortController();
+    axios.get(`/api/search?q=${inputValue}`, { signal: controller.signal })
+      .then(res => setSuggestions(res.data.results || []))
+      .catch(err => { if (err.name !== 'CanceledError') console.error(err) });
 
-  // Clear suggestions on component mount
-  useEffect(() => {
-    setSuggestions([]);
-  }, []);
+    return () => controller.abort();
+  }, [inputValue]);
 
-  // Click outside to close suggestions
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setSuggestions([]);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleSearch = () => {
-    if (query.trim()) navigate("/results");
+    goToResults(inputValue); // pass whatever the user typed
   };
 
-  const handleSelectSuggestion = (title) => {
-    dispatch(setQuery(title));
-    dispatch(setQuery("")); 
-    setSuggestions([]);
-    navigate("/results");
+  const handleSelectSuggestion = (item) => {
+    goToResults(item.country); // pass the selected item's country
   };
+
+  const goToResults = (value) => {
+    dispatch(setQuery(value.trim())); // update Redux query
+    navigate("/results");             // go to results page
+  };
+
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div className="position-relative" style={{ width: "400px" }} ref={dropdownRef}>
+      <div className="position-relative w-400">
         <div className="input-group shadow rounded-pill overflow-hidden">
           <span className="input-group-text bg-white border-0">
             <i className="bi bi-search text-secondary"></i>
@@ -64,8 +51,8 @@ function Home() {
             type="text"
             className="form-control border-0 no-shadow-input"
             placeholder="Search here..."
-            value={query}
-            onChange={(e) => dispatch(setQuery(e.target.value))}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
           />
           <span
             className="input-group-text bg-white border-0"
@@ -82,21 +69,19 @@ function Home() {
             {suggestions.map((item, index) => (
               <li
                 key={index}
-                className="list-group-item list-group-item-action"
-                style={{ cursor: "pointer" }}
-                onClick={() => handleSelectSuggestion(item.title)}
+                className="list-group-item list-group-item-action pointer"
+                onClick={() => handleSelectSuggestion(item)}
               >
-                {item.title}
+                {item.title} <small className="text-muted">({item.country} {item.flag})</small>
               </li>
             ))}
           </ul>
         )}
-
-        <div className="d-flex justify-content-center mt-3">
+         <div className="d-flex justify-content-center mt-3">
           <button
             className="btn btn-primary px-4 rounded-pill"
             onClick={handleSearch}
-            disabled={!query.trim()}
+            disabled={inputValue.trim().length < 3} 
           >
             Search
           </button>

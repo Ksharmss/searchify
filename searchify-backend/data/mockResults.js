@@ -3,6 +3,7 @@
 const mockData = [
   {
     country: "France",
+    flag: "🇫🇷",
     places: [
       { title: "Paris Getaway", description: "Experience the romance and art in the heart of France.", image: "paris.jpg" },
       { title: "Nice Beaches", description: "Relax at the sunny beaches of Nice.", image: "nice.jpg" },
